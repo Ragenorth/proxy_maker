@@ -42,6 +42,8 @@
     body {
         font-family: Arial, sans-serif;
         text-align: center;
+        background-color: #121212; /* Dark background for body */
+        color: white; /* Light text color for dark background */
         margin: 50px;
     }
 
@@ -54,8 +56,9 @@
         max-height: 300px; /* Limit height of the container */
         margin: 20px auto;
         overflow-y: scroll; /* Enable vertical scroll */
-        border: 1px solid #ccc;
+        border: 1px solid #444; /* Dark border */
         padding: 10px;
+        background-color: #1e1e1e; /* Dark background for the image container */
     }
 
     .image-preview-container img {
@@ -73,8 +76,9 @@
         max-height: 500px; /* Limit height of the container */
         margin: 20px auto;
         overflow-y: scroll; /* Enable vertical scroll */
-        border: 1px solid #ccc;
+        border: 1px solid #444; /* Dark border */
         padding: 10px;
+        background-color: #1e1e1e; /* Dark background for the canvas container */
     }
 
     .canvas-preview-container img {
@@ -82,17 +86,72 @@
         height: auto;
     }
 
+    /* File input styling */
+    input[type="file"] {
+        padding: 10px 20px;
+        margin-top: 20px;
+        background-color: #555;  /* Grey background */
+        color: white;
+        border: 1px solid #444;  /* Dark border */
+        border-radius: 8px;  /* Rounded corners */
+        cursor: pointer;
+        font-size: 14px;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    input[type="file"]:hover {
+        background-color: #777;  /* Lighter grey on hover */
+        transform: scale(1.05);  /* Slightly scale the button on hover */
+    }
+
+    /* Styling for the 'Choose Files' label inside the file input */
+    input[type="file"]::file-selector-button {
+        background-color: #555;  /* Grey background */
+        color: white;
+        border: 1px solid #444;  /* Dark border */
+        border-radius: 8px;  /* Rounded corners */
+        padding: 10px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    /* Optional styling for the text area to better align with the dark theme */
+    h3 {
+        color: #ffffff;  /* White text for headings */
+    }
+
     button {
         padding: 10px 20px;
         margin-top: 20px;
-        background-color: #007BFF;
+        background-color: #555;  /* Set grey background color */
         color: white;
-        border: none;
+        border: 1px solid #444;  /* Add a darker border for contrast */
+        border-radius: 8px;  /* Apply border radius for rounded corners */
         cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.2s ease;  /* Smooth hover effect */
     }
 
     button:hover {
-        background-color: #0056b3;
+        background-color: #777;  /* Lighter grey on hover */
+        transform: scale(1.05);  /* Slightly scale the button on hover for a nice effect */
+    }
+
+    select {
+        background-color: #333;
+        color: white;
+        border: 1px solid #444;
+        padding: 5px;
+        font-size: 14px;
+    }
+
+    h2, h3 {
+        color: #ffffff; /* White text for headings */
+    }
+
+    option {
+        background-color: #333;
+        color: white;
     }
 </style>
 
