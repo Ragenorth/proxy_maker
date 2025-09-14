@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Canvas Creator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script> <!-- JSZip library -->
+</head>
+<body>
+    <h1>Image Canvas Creator</h1>
+    
+    <!-- Image upload input -->
+    <input type="file" id="imageInput" multiple>
+    
+    <!-- Dropdown for selecting background color -->
+    <h3>Select Background Color:</h3>
+    <select id="backgroundColorSelect" onchange="setBackgroundColor()">
+        <option value="white">White Background</option>
+        <option value="black">Black Background</option>
+    </select>
+    
+    <!-- Scrollable container for the selected images -->
+    <h2>Selected Images</h2>
+    <div class="image-preview-container" id="imagePreview"></div>
+    
+    <button onclick="generateCanvas()">Create Canvas</button>
+
+    <!-- Scrollable container for the created canvases -->
+    <h2>Created Canvases</h2>
+    <div id="result" class="canvas-preview-container"></div>
+
+    <!-- Button to download all canvases as a ZIP file -->
+    <button onclick="downloadAllCanvases()">Download All Canvases as ZIP</button>
+
+    <!-- Button to download all canvases as individual files -->
+    <button onclick="downloadAllIndividually()">Download All Individually</button>
+
+</body>
+</html>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        margin: 50px;
+    }
+
+    /* Container for selected images with scroll */
+    .image-preview-container {
+        display: grid;
+        grid-template-columns: repeat(9, 1fr); /* 9 images per row */
+        grid-gap: 10px; /* Spacing between images */
+        width: 80%;
+        max-height: 300px; /* Limit height of the container */
+        margin: 20px auto;
+        overflow-y: scroll; /* Enable vertical scroll */
+        border: 1px solid #ccc;
+        padding: 10px;
+    }
+
+    .image-preview-container img {
+        max-width: 100%;
+        height: auto;
+        object-fit: contain; /* Make sure images maintain their aspect ratio */
+    }
+
+    /* Container for created canvases with scroll */
+    .canvas-preview-container {
+        display: grid;
+        grid-template-columns: repeat(9, 1fr); /* 9 canvases per row */
+        grid-gap: 10px; /* Spacing between canvases */
+        width: 80%;
+        max-height: 500px; /* Limit height of the container */
+        margin: 20px auto;
+        overflow-y: scroll; /* Enable vertical scroll */
+        border: 1px solid #ccc;
+        padding: 10px;
+    }
+
+    .canvas-preview-container img {
+        max-width: 100%;
+        height: auto;
+    }
+
+    button {
+        padding: 10px 20px;
+        margin-top: 20px;
+        background-color: #007BFF;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background-color: #0056b3;
+    }
+</style>
+
+<script>
+    let images = [];
+    let canvasArray = [];
+    let backgroundColor = 'white'; // Default background color
+
+    // When images are selected, display previews
+    document.getElementById('imageInput').addEventListener('change', handleFileSelect);
+
+    function handleFileSelect(event) {
+        const files = event.target.files;
+        images = [];
+        const previewContainer = document.getElementById('imagePreview');
+        previewContainer.innerHTML = "";  // Clear previous preview
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+                const img = new Image();
+                img.src = e.target.result;
+                img.onload = function() {
+                    images.push({ img: img, src: e.target.result });
+                };
+                previewContainer.appendChild(img);  // Add preview image to the container
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // Function to update background color from the dropdown
+    function setBackgroundColor() {
+        backgroundColor = document.getElementById('backgroundColorSelect').value; // Get selected color
+    }
+
+    function generateCanvas() {
+        if (images.length === 0) {
+            alert("Please upload some images first!");
+            return;
+        }
+
+        // Reset canvasArray for new generation
+        canvasArray = [];
+
+        // Set the canvas size (same as in your Python script)
+        const canvasWidth = 1428;
+        const canvasHeight = 2019;
+
+        // Define starting positions for the images
+        const startX = (canvasWidth - 3 * 431) / 2;
+        const startY = (canvasHeight - 3 * 600) / 2;
+
+        let imageIndex = 0;
+
+        // Loop through and create the canvases
+        while (imageIndex < images.length) {
+            // Create a new canvas
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
+
+            // Set the background color based on user selection
+            ctx.fillStyle = backgroundColor;  // Set the background color (black or white)
+            ctx.fillRect(0, 0, canvas.width, canvas.height);  // Fill the canvas with the background color
+
+            // Loop through 9 images (3x3 grid) and draw them onto the canvas
+            for (let row = 0; row < 3; row++) {
+                for (let col = 0; col < 3; col++) {
+                    if (imageIndex < images.length) {
+                        const img = images[imageIndex].img;
+                        ctx.drawImage(img, startX + col * 431, startY + row * 600, 431, 600);
+                        imageIndex++;
+                    }
+                }
+            }
+
+            // Create an image element to display the canvas on the webpage
+            const resultImg = new Image();
+            resultImg.src = canvas.toDataURL('image/jpeg');  // Convert canvas to JPEG image
+            canvasArray.push(resultImg);  // Store the canvas for later display
+        }
+
+        // Display all canvases
+        const resultContainer = document.getElementById('result');
+        resultContainer.innerHTML = ''; // Clear previous canvases
+
+        // Append all generated canvases to the result container
+        canvasArray.forEach(function(resultImg, index) {
+            resultContainer.appendChild(resultImg);
+
+            // Optional styling for the result images
+            resultImg.style.margin = "20px";
+        });
+    }
+
+    // Download all canvases as a ZIP file
+    function downloadAllCanvases() {
+        if (canvasArray.length === 0) {
+            alert("Please generate some canvases first!");
+            return;
+        }
+
+        const zip = new JSZip(); // Create a new JSZip instance
+
+        // Add all canvases to the ZIP file
+        canvasArray.forEach((resultImg, index) => {
+            // Convert the canvas image to base64
+            const imageData = resultImg.src.split(',')[1]; // Remove the 'data:image/jpeg;base64,' prefix
+            zip.file(`canvas_output_${index + 1}.jpg`, imageData, { base64: true });
+        });
+
+        // Generate the ZIP file and download it
+        zip.generateAsync({ type: "blob" }).then(function(content) {
+            // Create a temporary download link
+            const downloadLink = document.createElement('a');
+            downloadLink.href = URL.createObjectURL(content);
+            downloadLink.download = "canvases.zip";
+            downloadLink.click();
+        });
+    }
+
+    // Download all canvases individually
+    function downloadAllIndividually() {
+        if (canvasArray.length === 0) {
+            alert("Please generate some canvases first!");
+            return;
+        }
+
+        // Loop through all canvases and trigger the download for each
+        canvasArray.forEach((resultImg, index) => {
+            const link = document.createElement('a');
+            link.href = resultImg.src; // Canvas image as a data URL
+            link.download = `canvas_output_${index + 1}.jpg`; // Name of the file
+            link.click(); // Trigger the download
+        });
+    }
+</script>
