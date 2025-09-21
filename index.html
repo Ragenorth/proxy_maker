@@ -167,7 +167,9 @@
         const files = event.target.files;
         images = [];
         const previewContainer = document.getElementById('imagePreview');
-        previewContainer.innerHTML = "";  // Clear previous preview
+        previewContainer.innerHTML = "";
+
+        let loadedCount = 0; // Track how many images have finished loading
 
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
@@ -176,10 +178,18 @@
             reader.onload = function (e) {
                 const img = new Image();
                 img.src = e.target.result;
-                img.onload = function() {
+                img.onload = function () {
                     images.push({ img: img, src: e.target.result });
+                    loadedCount++;
+
+                    // Once all images are loaded, enable button
+                    if (loadedCount === files.length) {
+                        console.log("All images loaded, ready to generate canvas");
+                        alert("All images loaded! Now click 'Create Canvas'");
+                    }
                 };
-                previewContainer.appendChild(img);  // Add preview image to the container
+
+                previewContainer.appendChild(img);
             };
             reader.readAsDataURL(file);
         }
