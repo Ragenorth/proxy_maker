@@ -24,6 +24,7 @@
     <div class="image-preview-container" id="imagePreview"></div>
     
     <button onclick="generateCanvas()">Create Canvas</button>
+    <button onclick="generateYugiohCanvas()">Create YUGIOH Canvas</button>
 
     <!-- Scrollable container for the created canvases -->
     <h2>Created Canvases</h2>
@@ -259,6 +260,78 @@
 
             // Optional styling for the result images
             resultImg.style.margin = "20px";
+        });
+    }
+
+    function generateYugiohCanvas() {
+        if (images.length === 0) {
+            alert("Please upload some images first!");
+            return;
+        }
+
+        // Reset canvasArray for new generation
+        canvasArray = [];
+
+        // New card dimensions
+        // const CARD_WIDTH = 401;
+        // const CARD_HEIGHT = 584;
+
+        // New card dimensions
+        const CARD_WIDTH = 421;
+        const CARD_HEIGHT = 605;
+
+        // Set the canvas size
+        const canvasWidth = 1428;
+        const canvasHeight = 2019;
+
+        // Center the grid on the canvas
+        const startX = (canvasWidth - 3 * CARD_WIDTH) / 2;
+        const startY = (canvasHeight - 3 * CARD_HEIGHT) / 2;
+
+        let imageIndex = 0;
+
+        // Loop through and create the canvases
+        while (imageIndex < images.length) {
+            // Create a new canvas
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
+
+            // Fill canvas with background color
+            ctx.fillStyle = backgroundColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw up to 9 cards in a 3x3 grid
+            for (let row = 0; row < 3; row++) {
+                for (let col = 0; col < 3; col++) {
+                    if (imageIndex < images.length) {
+                        const img = images[imageIndex].img;
+                        ctx.drawImage(
+                            img,
+                            startX + col * CARD_WIDTH,
+                            startY + row * CARD_HEIGHT,
+                            CARD_WIDTH,
+                            CARD_HEIGHT
+                        );
+                        imageIndex++;
+                    }
+                }
+            }
+
+            // Convert canvas to image
+            const resultImg = new Image();
+            resultImg.src = canvas.toDataURL('image/jpeg');
+            canvasArray.push(resultImg);
+        }
+
+        // Show the result images on the page
+        const resultContainer = document.getElementById('result');
+        resultContainer.innerHTML = ''; // Clear previous
+
+        canvasArray.forEach(function (resultImg) {
+            resultContainer.appendChild(resultImg);
+            resultImg.style.margin = "20px"; // Optional styling
         });
     }
 
