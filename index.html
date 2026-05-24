@@ -3,15 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Canvas Creator</title>
+    <title>Deck Canvas Creator</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script> <!-- JSZip library -->
 </head>
 <body>
-    <h1>Image Canvas Creator</h1>
-    
-    <!-- Image upload input -->
-    <input type="file" id="imageInput" multiple>
-    
+    <h1>Deck Canvas Creator</h1>
+
+    <div class="controls">
+        <div class="upload-block">
+            <h3>Upload images</h3>
+            <p class="help-text">Upload card art, then set quantities for each image. When ready, generate your canvas.</p>
+            <input type="file" id="imageInput" multiple accept="image/*">
+            <div id="statusText" class="status-text">Upload images to get started.</div>
+        </div>
+    </div>
+
     <!-- Dropdown for selecting background color -->
     <h3>Select Background Color:</h3>
     <select id="backgroundColorSelect" onchange="setBackgroundColor()">
@@ -19,23 +25,34 @@
         <option value="black">Black Background</option>
     </select>
     
-    <!-- Scrollable container for the selected images -->
-    <h2>Selected Images</h2>
-    <div class="image-preview-container" id="imagePreview"></div>
-    
-    <button onclick="generateCanvas()">Create Canvas</button>
-    <button onclick="generateYugiohCanvas()">Create YUGIOH Canvas</button>
+    <!-- Scrollable container for the selected images and decklist side by side -->
+    <div class="preview-decklist-wrapper">
+        <div class="preview-section">
+            <h2>Selected Images</h2>
+            <div class="image-preview-container" id="imagePreview"></div>
+        </div>
+        <div class="decklist-section">
+            <h2>Decklist</h2>
+            <div id="decklist" class="decklist-container">Upload images to set quantities and build the decklist.</div>
+        </div>
+    </div>
 
     <!-- Scrollable container for the created canvases -->
     <h2>Created Canvases</h2>
-    <h2> (BUT CHROME LIMITS 10 SIMULTANEOUS DOWNLOADS, SO IF YOU WANT DOWNLOAD MORE THAN 10 BETTER USE ZIP)</h2>
+    <h3>Chrome limits 10 simultaneous downloads; use ZIP for more</h3>
     <div id="result" class="canvas-preview-container"></div>
 
     <!-- Button to download all canvases as a ZIP file -->
-    <button onclick="downloadAllCanvases()">Download All Canvases as ZIP</button>
+    <button id="downloadZipBtn" class="secondary" onclick="downloadAllCanvases()" disabled>Download All Canvases as ZIP</button>
 
     <!-- Button to download all canvases as individual files -->
-    <button onclick="downloadAllIndividually()">Download All Individually</button>
+    <button id="downloadIndividuallyBtn" class="secondary" onclick="downloadAllIndividually()" disabled>Download All Individually</button>
+
+    <!-- <div class="actions">
+        <button id="createCanvasBtn" class="primary" onclick="generateCanvas()" disabled>Create Canvas</button>
+        <button id="createYugiohCanvasBtn" class="primary" onclick="generateYugiohCanvas()" disabled>Create YUGIOH Canvas</button>
+        <button id="clearAllBtn" class="secondary" type="button" onclick="clearAll()" disabled>Clear All</button>
+    </div> -->
 
 </body>
 </html>
@@ -49,35 +66,57 @@
         margin: 50px;
     }
 
+    /* Wrapper for preview and decklist side by side */
+    .preview-decklist-wrapper {
+        display: flex;
+        gap: 40px;
+        width: 90%;
+        margin: 20px auto;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .preview-section {
+        flex: 1;
+        min-width: 400px;
+    }
+
+    .decklist-section {
+        flex: 1;
+        min-width: 300px;
+    }
+
     /* Container for selected images with scroll */
     .image-preview-container {
         display: grid;
-        grid-template-columns: repeat(9, 1fr); /* 9 images per row */
+        grid-template-columns: repeat(4, minmax(0, 1fr)); /* Up to 4 images per row */
+        grid-auto-rows: auto;
         grid-gap: 10px; /* Spacing between images */
-        width: 80%;
-        max-height: 300px; /* Limit height of the container */
-        margin: 20px auto;
-        overflow-y: scroll; /* Enable vertical scroll */
+        width: 100%;
+        max-height: calc(3 * 300px + 20px); /* Up to 3 rows visible before scrolling */
+        overflow-y: auto; /* Enable vertical scroll after 3 rows */
         border: 1px solid #444; /* Dark border */
         padding: 10px;
         background-color: #1e1e1e; /* Dark background for the image container */
+        min-width: 0;
     }
 
     .image-preview-container img {
-        max-width: 100%;
-        height: auto;
-        object-fit: contain; /* Make sure images maintain their aspect ratio */
+        width: 100%;
+        height: 150px;
+        object-fit: cover; /* Keep a consistent preview height */
+        border-radius: 8px;
     }
 
     /* Container for created canvases with scroll */
     .canvas-preview-container {
         display: grid;
-        grid-template-columns: repeat(9, 1fr); /* 9 canvases per row */
+        grid-template-columns: repeat(3, 1fr); /* 3 canvases per row */
         grid-gap: 10px; /* Spacing between canvases */
         width: 80%;
-        max-height: 500px; /* Limit height of the container */
+        max-height: calc(2 * 220px + 30px); /* Up to 2 rows visible before scrolling */
         margin: 20px auto;
-        overflow-y: scroll; /* Enable vertical scroll */
+        overflow-y: auto; /* Enable vertical scroll after 2 rows */
         border: 1px solid #444; /* Dark border */
         padding: 10px;
         background-color: #1e1e1e; /* Dark background for the canvas container */
@@ -155,6 +194,195 @@
         background-color: #333;
         color: white;
     }
+
+    .controls {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .upload-block {
+        background: #1e1e1e;
+        border: 1px solid #444;
+        border-radius: 12px;
+        padding: 20px;
+        width: 320px;
+    }
+
+    .upload-block input,
+    .upload-block button {
+        width: 100%;
+        margin-top: 10px;
+    }
+
+    .help-text {
+        margin: 0 0 12px;
+        color: #ccc;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    .status-text {
+        margin-top: 10px;
+        color: #ccc;
+        min-height: 18px;
+    }
+
+    .actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
+        margin: 20px auto;
+        width: 80%;
+    }
+
+    .primary {
+        background-color: #4caf50;
+        border-color: #3e8e41;
+    }
+
+    .secondary {
+        background-color: #333;
+        border-color: #444;
+    }
+
+    .primary:hover {
+        background-color: #5ec26d;
+    }
+
+    .secondary:hover {
+        background-color: #444;
+    }
+
+    .card-preview {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        background: #1b1b1b;
+        border: 1px solid #333;
+        border-radius: 12px;
+        padding: 10px;
+    }
+
+    .card-preview img {
+        width: 100%;
+        max-width: 140px;
+        height: 180px;
+        object-fit: cover;
+        border-radius: 8px;
+    }
+
+    .card-preview span {
+        color: #ddd;
+        font-size: 13px;
+        text-align: center;
+        max-width: 140px;
+    }
+
+    .preview-controls {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .quantity-label {
+        color: #ddd;
+        font-size: 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .quantity-input {
+        width: 60px;
+        padding: 4px 6px;
+        border-radius: 6px;
+        border: 1px solid #555;
+        background: #222;
+        color: white;
+    }
+
+    .quantity-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        border: 1px solid #555;
+        background: #2b2b2b;
+        color: white;
+        cursor: pointer;
+        font-size: 16px;
+        line-height: 1;
+    }
+
+    .quantity-btn:hover {
+        background: #3a3a3a;
+    }
+
+    .remove-button {
+        padding: 6px 10px;
+        border-radius: 8px;
+        border: 1px solid #555;
+        background: #2b2b2b;
+        color: white;
+        cursor: pointer;
+    }
+
+    .remove-button:hover {
+        background: #3a3a3a;
+    }
+
+    .decklist-container {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+        min-height: 100px;
+        border: 1px solid #444;
+        padding: 10px;
+        background-color: #1e1e1e;
+        overflow-y: auto;
+    }
+
+    .decklist-line-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid #333;
+        color: #fff;
+        font-size: 13px;
+    }
+
+    .decklist-line-item:last-child {
+        border-bottom: none;
+    }
+
+    .decklist-summary {
+        width: 80%;
+        margin: 10px auto 0;
+        color: #ccc;
+        font-size: 14px;
+    }
+
+    .decklist-line-item button {
+        background: #555;
+        border: 1px solid #444;
+        border-radius: 4px;
+        color: #fff;
+        cursor: pointer;
+        padding: 4px 10px;
+        font-size: 12px;
+    }
+
+    .decklist-line-item button:hover {
+        background: #777;
+    }
 </style>
 
 <script>
@@ -162,218 +390,316 @@
     let canvasArray = [];
     let backgroundColor = 'white'; // Default background color
 
-    // When images are selected, display previews
     document.getElementById('imageInput').addEventListener('change', handleFileSelect);
 
-    function handleFileSelect(event) {
-        const files = event.target.files;
-        images = [];
-        const previewContainer = document.getElementById('imagePreview');
-        previewContainer.innerHTML = "";
-
-        let loadedCount = 0; // Track how many images have finished loading
-
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            const reader = new FileReader();
-
-            reader.onload = function (e) {
-                const img = new Image();
-                img.src = e.target.result;
-                img.onload = function () {
-                    images.push({ img: img, src: e.target.result });
-                    loadedCount++;
-
-                    // Once all images are loaded, enable button
-                    if (loadedCount === files.length) {
-                        console.log("All images loaded, ready to generate canvas");
-                        alert("All images loaded! Now click 'Create Canvas'");
-                    }
-                };
-
-                previewContainer.appendChild(img);
-            };
-            reader.readAsDataURL(file);
+    function setStatus(message) {
+        const statusText = document.getElementById('statusText');
+        if (statusText) {
+            statusText.textContent = message;
         }
     }
 
-    // Function to update background color from the dropdown
-    function setBackgroundColor() {
-        backgroundColor = document.getElementById('backgroundColorSelect').value; // Get selected color
-    }
+    function handleFileSelect(event) {
+        const files = Array.from(event.target.files || []);
+        images = [];
+        canvasArray = [];
+        setStatus('Loading images...');
 
-    function generateCanvas() {
-        if (images.length === 0) {
-            alert("Please upload some images first!");
+        if (files.length === 0) {
+            setStatus('No files selected.');
+            updateButtons();
+            renderPreviewCards();
+            renderDecklist();
             return;
         }
 
-        // Reset canvasArray for new generation
-        canvasArray = [];
-
-        // Set the canvas size (same as in your Python script)
-        const canvasWidth = 1428;
-        const canvasHeight = 2019;
-
-        // Define starting positions for the images
-        const startX = (canvasWidth - 3 * 431) / 2;
-        const startY = (canvasHeight - 3 * 600) / 2;
-
-        let imageIndex = 0;
-
-        // Loop through and create the canvases
-        while (imageIndex < images.length) {
-            // Create a new canvas
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = canvasWidth;
-            canvas.height = canvasHeight;
-
-            // Set the background color based on user selection
-            ctx.fillStyle = backgroundColor;  // Set the background color (black or white)
-            ctx.fillRect(0, 0, canvas.width, canvas.height);  // Fill the canvas with the background color
-
-            // Loop through 9 images (3x3 grid) and draw them onto the canvas
-            for (let row = 0; row < 3; row++) {
-                for (let col = 0; col < 3; col++) {
-                    if (imageIndex < images.length) {
-                        const img = images[imageIndex].img;
-                        ctx.drawImage(img, startX + col * 431, startY + row * 600, 431, 600);
-                        imageIndex++;
-                    }
-                }
-            }
-
-            // Create an image element to display the canvas on the webpage
-            const resultImg = new Image();
-            resultImg.src = canvas.toDataURL('image/jpeg');  // Convert canvas to JPEG image
-            canvasArray.push(resultImg);  // Store the canvas for later display
+        // Filter to only image files
+        const imageFiles = files.filter(file => file.type.startsWith('image/'));
+        
+        if (imageFiles.length === 0) {
+            setStatus('No valid image files selected. Please upload image files only.');
+            updateButtons();
+            renderPreviewCards();
+            renderDecklist();
+            return;
         }
 
-        // Display all canvases
-        const resultContainer = document.getElementById('result');
-        resultContainer.innerHTML = ''; // Clear previous canvases
+        imageFiles.forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const imageObj = {
+                    img: null,
+                    src: e.target.result,
+                    label: file.name || `Image ${index + 1}`,
+                    quantity: 1
+                };
 
-        // Append all generated canvases to the result container
-        canvasArray.forEach(function(resultImg, index) {
-            resultContainer.appendChild(resultImg);
+                images.push(imageObj);
 
-            // Optional styling for the result images
-            resultImg.style.margin = "20px";
+                const img = new Image();
+                img.src = imageObj.src;
+                img.onload = function () {
+                    imageObj.img = img;
+                    setStatus(`Loaded ${images.length} image(s). Adjust quantities or add/remove images.`);
+                    // Regenerate canvas if all images are now loaded
+                    if (images.every(imgObj => imgObj.img !== null)) {
+                        generateCanvas();
+                    }
+                    updateButtons();
+                };
+                img.onerror = function () {
+                    setStatus(`Loaded ${images.length} image(s). Adjust quantities or add/remove images.`);
+                    updateButtons();
+                };
+
+                renderPreviewCards();
+                renderDecklist();
+                updateButtons();
+            };
+            reader.readAsDataURL(file);
         });
     }
 
-    function generateYugiohCanvas() {
+    function renderPreviewCards() {
+        const previewContainer = document.getElementById('imagePreview');
+        previewContainer.innerHTML = '';
+        images.forEach((imageObj, index) => {
+            previewContainer.appendChild(addPreviewCard(imageObj, index));
+        });
+    }
+
+    function addPreviewCard(imageObj, index) {
+        const previewCard = document.createElement('div');
+        previewCard.className = 'card-preview';
+
+        const img = new Image();
+        img.src = imageObj.src;
+        img.alt = imageObj.label;
+        previewCard.appendChild(img);
+
+        const label = document.createElement('span');
+        label.textContent = imageObj.label;
+        previewCard.appendChild(label);
+
+        const controls = document.createElement('div');
+        controls.className = 'preview-controls';
+
+        const qtyWrapper = document.createElement('div');
+        qtyWrapper.className = 'quantity-label';
+
+        const minusBtn = document.createElement('button');
+        minusBtn.type = 'button';
+        minusBtn.className = 'quantity-btn';
+        minusBtn.textContent = '-';
+        minusBtn.addEventListener('click', () => {
+            if (imageObj.quantity > 1) {
+                imageObj.quantity--;
+                qtyText.textContent = `Qty: ${imageObj.quantity}`;
+                renderDecklist();
+            }
+        });
+
+        const qtyText = document.createElement('span');
+        qtyText.textContent = `Qty: ${imageObj.quantity}`;
+
+        const plusBtn = document.createElement('button');
+        plusBtn.type = 'button';
+        plusBtn.className = 'quantity-btn';
+        plusBtn.textContent = '+';
+        plusBtn.addEventListener('click', () => {
+            imageObj.quantity++;
+            qtyText.textContent = `Qty: ${imageObj.quantity}`;
+            renderDecklist();
+        });
+
+        qtyWrapper.appendChild(minusBtn);
+        qtyWrapper.appendChild(qtyText);
+        qtyWrapper.appendChild(plusBtn);
+        controls.appendChild(qtyWrapper);
+
+        const removeButton = document.createElement('button');
+        removeButton.type = 'button';
+        removeButton.className = 'remove-button';
+        removeButton.textContent = 'Remove';
+        removeButton.addEventListener('click', () => removeImage(index));
+        controls.appendChild(removeButton);
+
+        previewCard.appendChild(controls);
+        return previewCard;
+    }
+
+    function removeImage(index) {
+        images.splice(index, 1);
+        renderPreviewCards();
+        renderDecklist();
+        updateButtons();
+        setStatus(images.length > 0 ? `Removed image. ${images.length} remaining.` : 'No cards selected. Upload images to start.');
+    }
+
+    function renderDecklist() {
+        const container = document.getElementById('decklist');
+        container.innerHTML = '';
+
         if (images.length === 0) {
-            alert("Please upload some images first!");
+            container.textContent = 'No cards selected. Upload images to set quantities.';
+            document.getElementById('result').innerHTML = '';
             return;
         }
 
-        // Reset canvasArray for new generation
+        const totalCopies = images.reduce((sum, image) => sum + image.quantity, 0);
+        const summary = document.createElement('div');
+        summary.className = 'decklist-summary';
+        summary.textContent = `Deck contains ${images.length} unique images and ${totalCopies} total copies.`;
+        container.appendChild(summary);
+
+        images.forEach((imageObj, index) => {
+            const item = document.createElement('div');
+            item.className = 'decklist-line-item';
+
+            const label = document.createElement('span');
+            label.textContent = `${imageObj.label} x${imageObj.quantity}`;
+            item.appendChild(label);
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.textContent = 'Remove';
+            removeBtn.addEventListener('click', () => removeImage(index));
+            item.appendChild(removeBtn);
+
+            container.appendChild(item);
+        });
+
+        // Auto-generate canvas when decklist updates (only if all images are loaded)
+        if (images.every(img => img.img !== null)) {
+            generateCanvas();
+        }
+    }
+
+    function clearAll() {
+        images = [];
         canvasArray = [];
+        renderPreviewCards();
+        renderDecklist();
+        updateButtons();
+        setStatus('Cleared all images. Upload new images to continue.');
+        document.getElementById('imageInput').value = '';
+        document.getElementById('result').innerHTML = '';
+    }
 
-        // New card dimensions
-        // const CARD_WIDTH = 401;
-        // const CARD_HEIGHT = 584;
+    function createCanvasFromImages(cardWidth, cardHeight) {
+        const expandedImages = [];
+        images.forEach(imageObj => {
+            for (let i = 0; i < imageObj.quantity; i++) {
+                expandedImages.push(imageObj);
+            }
+        });
 
-        // New card dimensions
-        const CARD_WIDTH = 421;
-        const CARD_HEIGHT = 605;
+        if (expandedImages.length === 0) {
+            alert('Please upload images and set quantities before generating a canvas.');
+            return;
+        }
 
-        // Set the canvas size
+        canvasArray = [];
         const canvasWidth = 1428;
         const canvasHeight = 2019;
-
-        // Center the grid on the canvas
-        const startX = (canvasWidth - 3 * CARD_WIDTH) / 2;
-        const startY = (canvasHeight - 3 * CARD_HEIGHT) / 2;
-
+        const startX = (canvasWidth - 3 * cardWidth) / 2;
+        const startY = (canvasHeight - 3 * cardHeight) / 2;
         let imageIndex = 0;
 
-        // Loop through and create the canvases
-        while (imageIndex < images.length) {
-            // Create a new canvas
+        while (imageIndex < expandedImages.length) {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             canvas.width = canvasWidth;
             canvas.height = canvasHeight;
-
-            // Fill canvas with background color
             ctx.fillStyle = backgroundColor;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Draw up to 9 cards in a 3x3 grid
             for (let row = 0; row < 3; row++) {
                 for (let col = 0; col < 3; col++) {
-                    if (imageIndex < images.length) {
-                        const img = images[imageIndex].img;
-                        ctx.drawImage(
-                            img,
-                            startX + col * CARD_WIDTH,
-                            startY + row * CARD_HEIGHT,
-                            CARD_WIDTH,
-                            CARD_HEIGHT
-                        );
+                    if (imageIndex < expandedImages.length) {
+                        const img = expandedImages[imageIndex].img;
+                        if (img) {
+                            ctx.drawImage(img, startX + col * cardWidth, startY + row * cardHeight, cardWidth, cardHeight);
+                        }
                         imageIndex++;
                     }
                 }
             }
 
-            // Convert canvas to image
             const resultImg = new Image();
             resultImg.src = canvas.toDataURL('image/jpeg');
+            resultImg.style.margin = '20px';
             canvasArray.push(resultImg);
         }
 
-        // Show the result images on the page
         const resultContainer = document.getElementById('result');
-        resultContainer.innerHTML = ''; // Clear previous
-
-        canvasArray.forEach(function (resultImg) {
-            resultContainer.appendChild(resultImg);
-            resultImg.style.margin = "20px"; // Optional styling
-        });
+        resultContainer.innerHTML = '';
+        canvasArray.forEach(resultImg => resultContainer.appendChild(resultImg));
+        setStatus(`Canvas generated: ${canvasArray.length} sheet(s) ready.`);
+        updateButtons();
     }
 
-    // Download all canvases as a ZIP file
+    function generateCanvas() {
+        createCanvasFromImages(431, 600);
+    }
+
+    function generateYugiohCanvas() {
+        createCanvasFromImages(421, 605);
+    }
+
+    function updateButtons() {
+        const createBtn = document.getElementById('createCanvasBtn');
+        const createYugiBtn = document.getElementById('createYugiohCanvasBtn');
+        const clearBtn = document.getElementById('clearAllBtn');
+        const downloadZipBtn = document.getElementById('downloadZipBtn');
+        const downloadIndBtn = document.getElementById('downloadIndividuallyBtn');
+
+        const hasImages = images.length > 0;
+        const hasCanvas = canvasArray.length > 0;
+
+        if (createBtn) createBtn.disabled = !hasImages;
+        if (createYugiBtn) createYugiBtn.disabled = !hasImages;
+        if (clearBtn) clearBtn.disabled = !hasImages;
+        if (downloadZipBtn) downloadZipBtn.disabled = !hasCanvas;
+        if (downloadIndBtn) downloadIndBtn.disabled = !hasCanvas;
+    }
+
     function downloadAllCanvases() {
         if (canvasArray.length === 0) {
-            alert("Please generate some canvases first!");
+            alert('Please generate some canvases first!');
             return;
         }
 
-        const zip = new JSZip(); // Create a new JSZip instance
-
-        // Add all canvases to the ZIP file
+        const zip = new JSZip();
         canvasArray.forEach((resultImg, index) => {
-            // Convert the canvas image to base64
-            const imageData = resultImg.src.split(',')[1]; // Remove the 'data:image/jpeg;base64,' prefix
+            const imageData = resultImg.src.split(',')[1];
             zip.file(`canvas_output_${index + 1}.jpg`, imageData, { base64: true });
         });
 
-        // Generate the ZIP file and download it
-        zip.generateAsync({ type: "blob" }).then(function(content) {
-            // Create a temporary download link
+        zip.generateAsync({ type: 'blob' }).then(content => {
             const downloadLink = document.createElement('a');
             downloadLink.href = URL.createObjectURL(content);
-            downloadLink.download = "canvases.zip";
+            downloadLink.download = 'canvases.zip';
             downloadLink.click();
         });
     }
 
-    // Download all canvases individually
     function downloadAllIndividually() {
         if (canvasArray.length === 0) {
-            alert("Please generate some canvases first!");
+            alert('Please generate some canvases first!');
             return;
         }
 
-        // Loop through all canvases and trigger the download for each
         canvasArray.forEach((resultImg, index) => {
             const link = document.createElement('a');
-            link.href = resultImg.src; // Canvas image as a data URL
-            link.download = `canvas_output_${index + 1}.jpg`; // Name of the file
-            link.click(); // Trigger the download
+            link.href = resultImg.src;
+            link.download = `canvas_output_${index + 1}.jpg`;
+            link.click();
         });
     }
+
+    window.addEventListener('load', () => {
+        renderDecklist();
+        updateButtons();
+    });
 </script>
